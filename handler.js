@@ -17,6 +17,7 @@ let bridge
 
 exports.handler = async function (event, context) {
   if (!bridge) {
+    // let Next.js initialize and create the request handler
     const nextHandler = await createServerHandler({
       port: currentPort,
       hostname,
@@ -24,9 +25,10 @@ exports.handler = async function (event, context) {
       conf: nextConfig,
     })
 
+    // create a standard HTTP server that will receive
+    // requests from the bridge and send them to Next.js
     const server = http.createServer(async (req, res) => {
       try {
-        console.log('Next server request:')
         await nextHandler(req, res)
       } catch (err) {
         console.error(err);
@@ -39,8 +41,10 @@ exports.handler = async function (event, context) {
     bridge.listen()
   }
 
+  // pass the AWS lambda event and context to the bridge
   const { headers, ...result } = await bridge.launcher(event, context)
 
+  // log the response from Next.js
   const response = { headers, statusCode: result.statusCode }
   console.log('Next server response:', JSON.stringify(response, null, 2))
 
